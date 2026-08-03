@@ -12,7 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Redirect URI 로 `soundmate://callback` 을 등록한 뒤
 /// [clientId] 를 발급받은 값으로 바꿔야 한다.
 class SpotifyAuth {
-  static const clientId = 'YOUR_SPOTIFY_CLIENT_ID';
+  static const clientId = '83d360c0439344838b12fa23a893f59c';
   static const redirectUri = 'soundmate://callback';
   static const _scopes = 'user-read-currently-playing user-read-recently-played';
 
