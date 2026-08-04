@@ -5,9 +5,9 @@
 /// (구형 프로젝트의 anon public 키를 넣어도 동작한다)
 /// 이 키는 RLS(Row Level Security)로 보호되므로 앱에 포함해도 안전하다.
 class SupabaseConfig {
-  static const url = 'YOUR_SUPABASE_URL'; // 예: https://xxxx.supabase.co
+  static const url = 'https://vehxzxphvrmgavbatgwq.supabase.co';
   static const publishableKey =
-      'YOUR_SUPABASE_PUBLISHABLE_KEY'; // sb_publishable_... 또는 anon 키
+      'sb_publishable_ib7D3L01m8A6tK8zryctTg_UtYdBUvv';
 
   static bool get isConfigured =>
       !url.contains('YOUR_') && !publishableKey.contains('YOUR_');

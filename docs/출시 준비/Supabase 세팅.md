@@ -4,14 +4,14 @@
 
 ## 1. 프로젝트 생성 (약 2분)
 
-- [ ] https://supabase.com/dashboard 접속 → 가입/로그인
-- [ ] `New project` → 이름 `soundmate`, 리전 **Northeast Asia (Seoul)** 선택
-- [ ] DB 비밀번호는 따로 보관 (앱에서는 안 씀)
+- [x] https://supabase.com/dashboard 접속 → 가입/로그인
+- [x] `New project` → 이름 `soundmate`, 리전 **Northeast Asia (Seoul)** 선택
+- [x] DB 비밀번호는 따로 보관 (앱에서는 안 씀)
 
 ## 2. 스키마 적용
 
-- [ ] 대시보드 왼쪽 `SQL Editor` → `New query`
-- [ ] 저장소의 `supabase/migrations/20260804000000_init.sql` 내용 전체 붙여넣기 → `Run`
+- [x] 대시보드 왼쪽 `SQL Editor` → `New query`
+- [x] 저장소의 `supabase/migrations/20260804000000_init.sql` 내용 전체 붙여넣기 → `Run`
 - 생성되는 것: profiles(자동 생성 트리거 포함), now_playing, friendships, playlists, playlist_songs, playlist_likes + RLS 정책 전부
 
 ## 3. 키 연결
