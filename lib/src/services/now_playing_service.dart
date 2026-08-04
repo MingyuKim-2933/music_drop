@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../config/supabase_config.dart';
 import '../models/track.dart';
 import 'media_session_channel.dart';
 import 'spotify_api.dart';
@@ -86,8 +88,32 @@ class NowPlayingService extends ChangeNotifier {
         best = c;
       }
     }
+    final changed = best?.toString() != _mine?.toString() ||
+        best?.isPlaying != _mine?.isPlaying;
     _mine = best;
     notifyListeners();
+    if (changed) _uploadMine();
+  }
+
+  /// 내 감상 상태를 서버에 업로드 → 친구들의 피드에 표시된다
+  Future<void> _uploadMine() async {
+    final np = _mine;
+    if (np == null || !SupabaseConfig.isConfigured) return;
+    final client = Supabase.instance.client;
+    final uid = client.auth.currentUser?.id;
+    if (uid == null) return;
+    try {
+      await client.from('now_playing').upsert({
+        'user_id': uid,
+        'title': np.title,
+        'artist': np.artist,
+        'source': np.source.name,
+        'is_playing': np.isPlaying,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      });
+    } catch (_) {
+      // 업로드 실패는 조용히 무시 — 다음 상태 변화 때 재시도
+    }
   }
 
   @override

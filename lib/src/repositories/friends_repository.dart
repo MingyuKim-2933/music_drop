@@ -6,8 +6,13 @@ import '../services/contacts_service.dart';
 class ContactMatch {
   final PhoneContact contact;
   final bool isAppUser;
+  final String? profileId; // 매칭된 앱 사용자의 프로필 ID (서버 매칭 시)
 
-  const ContactMatch({required this.contact, required this.isAppUser});
+  const ContactMatch({
+    required this.contact,
+    required this.isAppUser,
+    this.profileId,
+  });
 }
 
 /// 친구 피드 데이터 소스.
@@ -22,7 +27,7 @@ abstract class FriendsRepository {
   Future<List<ContactMatch>> matchContacts(List<PhoneContact> contacts);
 
   /// 앱을 쓰고 있는 연락처를 친구로 추가
-  Future<void> addFriend(PhoneContact contact);
+  Future<void> addFriend(ContactMatch match);
 }
 
 class MockFriendsRepository implements FriendsRepository {
@@ -109,11 +114,11 @@ class MockFriendsRepository implements FriendsRepository {
   }
 
   @override
-  Future<void> addFriend(PhoneContact contact) async {
+  Future<void> addFriend(ContactMatch match) async {
     await Future<void>.delayed(const Duration(milliseconds: 200));
     _added.add(Friend(
-      id: 'contact:${contact.phone}',
-      nickname: contact.name,
+      id: 'contact:${match.contact.phone}',
+      nickname: match.contact.name,
       emoji: '🎵',
     ));
   }

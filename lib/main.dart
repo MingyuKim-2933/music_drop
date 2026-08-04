@@ -9,6 +9,7 @@ import 'src/config/app_keys.dart';
 import 'src/config/supabase_config.dart';
 import 'src/repositories/friends_repository.dart';
 import 'src/repositories/playlist_repository.dart';
+import 'src/repositories/routed_friends_repository.dart';
 import 'src/repositories/routed_playlist_repository.dart';
 import 'src/screens/login_screen.dart';
 import 'src/screens/main_shell.dart';
@@ -36,7 +37,7 @@ class MuseApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<SpotifyAuth>(create: (_) => SpotifyAuth()),
-        Provider<FriendsRepository>(create: (_) => MockFriendsRepository()),
+        Provider<FriendsRepository>(create: (_) => RoutedFriendsRepository()),
         Provider<PlaylistRepository>(
             create: (_) => RoutedPlaylistRepository()),
         ChangeNotifierProvider<AuthService>(

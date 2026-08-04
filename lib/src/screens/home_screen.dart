@@ -90,6 +90,40 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Center(child: CircularProgressIndicator()),
                   );
                 }
+                if (snapshot.data!.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          const Text('🫂', style: TextStyle(fontSize: 40)),
+                          const SizedBox(height: 8),
+                          const Text('아직 친구가 없어요',
+                              style: TextStyle(color: Colors.white54)),
+                          const SizedBox(height: 12),
+                          FilledButton.tonalIcon(
+                            onPressed: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        const InviteFriendsScreen()),
+                              );
+                              if (mounted) {
+                                setState(() {
+                                  _friends = context
+                                      .read<FriendsRepository>()
+                                      .fetchFriends();
+                                });
+                              }
+                            },
+                            icon: const Icon(Icons.person_add_alt_1),
+                            label: const Text('친구 찾기'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
                 return Column(
                   children: [
                     for (final friend in snapshot.data!)

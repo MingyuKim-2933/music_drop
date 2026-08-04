@@ -51,7 +51,7 @@ class _InviteFriendsScreenState extends State<InviteFriendsScreen> {
   }
 
   Future<void> _addFriend(ContactMatch match) async {
-    await context.read<FriendsRepository>().addFriend(match.contact);
+    await context.read<FriendsRepository>().addFriend(match);
     if (!mounted) return;
     setState(() => _addedPhones.add(match.contact.phone));
     ScaffoldMessenger.of(context).showSnackBar(
