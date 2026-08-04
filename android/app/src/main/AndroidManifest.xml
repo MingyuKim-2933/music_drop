@@ -28,11 +28,14 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <!-- 카카오 로그인 콜백 — "kakao" 뒤를 실제 네이티브 앱 키로 교체할 것 -->
+        <!-- 카카오 로그인 콜백.
+             SDK 2.x의 실제 클래스는 com.kakao.sdk.flutter.auth.AuthCodeHandlerActivity 이며,
+             SDK가 이미 선언한 액티비티에 리다이렉트용 intent-filter만 병합한다.
+             (구버전 이름인 AuthCodeCustomTabsActivity를 쓰면 ClassNotFoundException으로 크래시) -->
         <activity
-            android:name="com.kakao.sdk.flutter.AuthCodeCustomTabsActivity"
+            android:name="com.kakao.sdk.flutter.auth.AuthCodeHandlerActivity"
             android:exported="true">
-            <intent-filter android:label="flutter_web_auth">
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>

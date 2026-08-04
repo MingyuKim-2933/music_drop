@@ -23,7 +23,7 @@
 
 - [x] (개발 중 편의) `Authentication > Sign In / Providers > Email` 에서 **Confirm email 끄기**
   - ⚠️ 출시 전에 다시 켜고 메일 템플릿 설정할 것
-- [ ] (선택) 카카오 연동: 카카오 개발자 콘솔에서 **OpenID Connect 활성화** → Supabase `Authentication > Providers > Kakao` 에 REST API 키/시크릿 입력
+- [x] (선택) 카카오 연동: 카카오 개발자 콘솔에서 **OpenID Connect 활성화** → Supabase `Authentication > Providers > Kakao` 에 REST API 키/시크릿 입력
 - 네이버는 Supabase 미지원 → 추후 Edge Function으로 커스텀 JWT 발급 (지금은 로컬 세션으로 동작)
 
 ## 동작 방식
