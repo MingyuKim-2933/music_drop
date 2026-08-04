@@ -4,8 +4,9 @@ import 'package:provider/provider.dart';
 
 import 'src/config/app_keys.dart';
 import 'src/repositories/friends_repository.dart';
-import 'src/screens/home_screen.dart';
+import 'src/repositories/playlist_repository.dart';
 import 'src/screens/login_screen.dart';
+import 'src/screens/main_shell.dart';
 import 'src/services/auth_service.dart';
 import 'src/services/now_playing_service.dart';
 import 'src/services/spotify_auth.dart';
@@ -25,6 +26,7 @@ class SoundmateApp extends StatelessWidget {
       providers: [
         Provider<SpotifyAuth>(create: (_) => SpotifyAuth()),
         Provider<FriendsRepository>(create: (_) => MockFriendsRepository()),
+        Provider<PlaylistRepository>(create: (_) => LocalPlaylistRepository()),
         ChangeNotifierProvider<AuthService>(
           create: (_) => AuthService()..restoreSession(),
         ),
@@ -63,6 +65,6 @@ class _AuthGate extends StatelessWidget {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    return auth.isLoggedIn ? const HomeScreen() : const LoginScreen();
+    return auth.isLoggedIn ? const MainShell() : const LoginScreen();
   }
 }

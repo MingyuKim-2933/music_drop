@@ -6,7 +6,7 @@
 ///   ⚠️ AndroidManifest.xml 의 com.naver.sdk.* meta-data,
 ///      ios/Runner/Info.plist 의 Nid* 키도 함께 교체할 것
 class AppKeys {
-  static const kakaoNativeAppKey = 'KAKAO_NATIVE_APP_KEY';
+  static const kakaoNativeAppKey = '3404dd9da9878ef06a402c36795cb1c0';
   static const naverClientId = 'NAVER_CLIENT_ID';
   static const naverClientSecret = 'NAVER_CLIENT_SECRET';
   static const naverClientName = '듣는중';

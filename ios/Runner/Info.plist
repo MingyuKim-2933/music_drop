@@ -43,8 +43,8 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<!-- 카카오 로그인 콜백 — 실제 네이티브 앱 키로 교체 -->
-				<string>kakaoKAKAO_NATIVE_APP_KEY</string>
+				<!-- 카카오 로그인 콜백 -->
+				<string>kakao3404dd9da9878ef06a402c36795cb1c0</string>
 				<!-- 네이버 로그인 콜백 -->
 				<string>soundmatenaver</string>
 			</array>
