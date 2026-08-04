@@ -4,6 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/friend.dart';
+import '../models/friend_group.dart';
 import '../models/reaction.dart';
 import '../models/track.dart';
 import '../services/contacts_service.dart';
@@ -151,5 +152,57 @@ class SupabaseFriendsRepository implements FriendsRepository {
               createdAt: DateTime.parse(r['created_at'] as String),
             ))
         .toList();
+  }
+
+  // ── 친구 그룹 ──────────────────────────────────────────
+
+  @override
+  Future<List<FriendGroup>> fetchGroups() async {
+    final rows = await _db
+        .from('friend_groups')
+        .select('id, name, emoji, friend_group_members(friend_id)')
+        .eq('owner_id', _uid)
+        .order('sort_order');
+    return rows
+        .map((r) => FriendGroup(
+              id: r['id'] as String,
+              name: r['name'] as String,
+              emoji: r['emoji'] as String? ?? '👥',
+              memberIds: ((r['friend_group_members'] as List?) ?? [])
+                  .map((m) => (m as Map)['friend_id'] as String)
+                  .toSet(),
+            ))
+        .toList();
+  }
+
+  @override
+  Future<FriendGroup> createGroup({
+    required String name,
+    required String emoji,
+  }) async {
+    final row = await _db
+        .from('friend_groups')
+        .insert({'owner_id': _uid, 'name': name, 'emoji': emoji})
+        .select()
+        .single();
+    return FriendGroup(
+      id: row['id'] as String,
+      name: row['name'] as String,
+      emoji: row['emoji'] as String? ?? '👥',
+    );
+  }
+
+  @override
+  Future<void> deleteGroup(String groupId) async {
+    await _db.from('friend_groups').delete().eq('id', groupId);
+  }
+
+  @override
+  Future<void> setGroupMembers(String groupId, Set<String> friendIds) async {
+    await _db.from('friend_group_members').delete().eq('group_id', groupId);
+    if (friendIds.isEmpty) return;
+    await _db.from('friend_group_members').insert([
+      for (final id in friendIds) {'group_id': groupId, 'friend_id': id},
+    ]);
   }
 }

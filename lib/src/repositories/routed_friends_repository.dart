@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/supabase_config.dart';
 import '../models/friend.dart';
+import '../models/friend_group.dart';
 import '../models/reaction.dart';
 import '../services/contacts_service.dart';
 import 'friends_repository.dart';
@@ -48,4 +49,19 @@ class RoutedFriendsRepository implements FriendsRepository {
   @override
   Future<List<Reaction>> fetchReceivedReactions() =>
       _active.fetchReceivedReactions();
+
+  @override
+  Future<List<FriendGroup>> fetchGroups() => _active.fetchGroups();
+
+  @override
+  Future<FriendGroup> createGroup(
+          {required String name, required String emoji}) =>
+      _active.createGroup(name: name, emoji: emoji);
+
+  @override
+  Future<void> deleteGroup(String groupId) => _active.deleteGroup(groupId);
+
+  @override
+  Future<void> setGroupMembers(String groupId, Set<String> friendIds) =>
+      _active.setGroupMembers(groupId, friendIds);
 }

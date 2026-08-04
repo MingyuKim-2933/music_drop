@@ -1,4 +1,5 @@
 import '../models/friend.dart';
+import '../models/friend_group.dart';
 import '../models/reaction.dart';
 import '../models/track.dart';
 import '../services/contacts_service.dart';
@@ -45,6 +46,15 @@ abstract class FriendsRepository {
 
   /// 내가 받은 반응 목록 (최신순)
   Future<List<Reaction>> fetchReceivedReactions();
+
+  // ── 친구 그룹 ──────────────────────────────────────────
+
+  Future<List<FriendGroup>> fetchGroups();
+  Future<FriendGroup> createGroup({required String name, required String emoji});
+  Future<void> deleteGroup(String groupId);
+
+  /// 그룹 멤버를 [friendIds]로 통째로 교체
+  Future<void> setGroupMembers(String groupId, Set<String> friendIds);
 }
 
 class MockFriendsRepository implements FriendsRepository {
@@ -170,5 +180,36 @@ class MockFriendsRepository implements FriendsRepository {
         createdAt: DateTime.now().subtract(const Duration(minutes: 30)),
       ),
     ];
+  }
+
+  final List<FriendGroup> _groups = [];
+  int _groupSeq = 0;
+
+  @override
+  Future<List<FriendGroup>> fetchGroups() async => List.of(_groups);
+
+  @override
+  Future<FriendGroup> createGroup({
+    required String name,
+    required String emoji,
+  }) async {
+    final group = FriendGroup(
+      id: 'mock:group:${_groupSeq++}',
+      name: name,
+      emoji: emoji,
+    );
+    _groups.add(group);
+    return group;
+  }
+
+  @override
+  Future<void> deleteGroup(String groupId) async {
+    _groups.removeWhere((g) => g.id == groupId);
+  }
+
+  @override
+  Future<void> setGroupMembers(String groupId, Set<String> friendIds) async {
+    final i = _groups.indexWhere((g) => g.id == groupId);
+    if (i != -1) _groups[i] = _groups[i].copyWith(memberIds: friendIds);
   }
 }

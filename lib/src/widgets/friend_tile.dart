@@ -7,9 +7,16 @@ import 'now_playing_card.dart';
 
 /// 친구 피드의 한 줄
 class FriendTile extends StatelessWidget {
-  const FriendTile({super.key, required this.friend});
+  const FriendTile({
+    super.key,
+    required this.friend,
+    this.sameSong = false,
+  });
 
   final Friend friend;
+
+  /// 나와 같은 곡을 지금 함께 듣는 중이면 강조 표시
+  final bool sameSong;
 
   String _timeAgo(DateTime t) {
     final diff = DateTime.now().difference(t);
@@ -28,8 +35,11 @@ class FriendTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1526),
+        color: sameSong ? const Color(0xFF241C3D) : const Color(0xFF1A1526),
         borderRadius: BorderRadius.circular(18),
+        border: sameSong
+            ? Border.all(color: const Color(0xFF7C4DFF), width: 1.5)
+            : null,
       ),
       child: Row(
         children: [
@@ -51,7 +61,21 @@ class FriendTile extends StatelessWidget {
                           ?.copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(width: 6),
-                    if (np != null)
+                    if (sameSong)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF7C4DFF),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          '🎧 같이 듣는 중',
+                          style: TextStyle(
+                              fontSize: 10, fontWeight: FontWeight.w700),
+                        ),
+                      )
+                    else if (np != null)
                       Text(
                         np.isPlaying ? '듣는중' : _timeAgo(np.updatedAt),
                         style: theme.textTheme.labelSmall?.copyWith(
