@@ -35,6 +35,8 @@
 		<string>kakaotalk</string>
 		<string>naversearchapp</string>
 		<string>naversearchthirdlogin</string>
+		<string>instagram</string>
+		<string>sms</string>
 	</array>
 	<key>CFBundleURLTypes</key>
 	<array>

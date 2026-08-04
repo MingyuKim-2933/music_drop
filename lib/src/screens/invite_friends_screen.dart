@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../repositories/friends_repository.dart';
+import '../services/auth_service.dart';
 import '../services/contacts_service.dart';
+import '../widgets/invite_sheet.dart';
 
 class InviteFriendsScreen extends StatefulWidget {
   const InviteFriendsScreen({super.key});
@@ -62,11 +63,13 @@ class _InviteFriendsScreenState extends State<InviteFriendsScreen> {
   }
 
   Future<void> _invite(ContactMatch match) async {
-    await SharePlus.instance.share(ShareParams(
-      text: '${match.contact.name}님, 듣는중에서 같이 음악 들어요! 🎧\n'
-          '지금 무슨 노래 듣는지 실시간으로 공유하는 앱이에요.\n'
-          'https://github.com/MingyuKim-2933/music_drop',
-    ));
+    final me = context.read<AuthService>().user;
+    await showInviteSheet(
+      context,
+      contact: match.contact,
+      myNickname: me?.nickname,
+      myUserId: me?.id,
+    );
   }
 
   @override
@@ -91,6 +94,36 @@ class _InviteFriendsScreenState extends State<InviteFriendsScreen> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(16),
                     children: [
+                      // 연락처와 무관하게 링크로 바로 초대
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF7C4DFF), Color(0xFF4527A0)],
+                          ),
+                        ),
+                        child: ListTile(
+                          leading: const Text('🎧',
+                              style: TextStyle(fontSize: 24)),
+                          title: const Text('초대 링크 보내기',
+                              style:
+                                  TextStyle(fontWeight: FontWeight.w700)),
+                          subtitle: const Text('카카오톡 · 인스타 DM · 문자',
+                              style: TextStyle(
+                                  color: Colors.white70, fontSize: 12)),
+                          trailing:
+                              const Icon(Icons.arrow_forward_ios, size: 16),
+                          onTap: () {
+                            final me = context.read<AuthService>().user;
+                            showInviteSheet(
+                              context,
+                              myNickname: me?.nickname,
+                              myUserId: me?.id,
+                            );
+                          },
+                        ),
+                      ),
                       if (appUsers.isNotEmpty) ...[
                         _SectionTitle('듣는중을 쓰고 있는 친구 (${appUsers.length})'),
                         for (final m in appUsers)

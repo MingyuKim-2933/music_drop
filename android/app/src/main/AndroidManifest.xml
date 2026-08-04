@@ -82,5 +82,16 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- 초대 공유 대상 앱 조회 (Android 11+ 패키지 가시성) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="instagram"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="sms"/>
+        </intent>
+        <package android:name="com.kakao.talk"/>
+        <package android:name="com.instagram.android"/>
     </queries>
 </manifest>
