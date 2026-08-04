@@ -7,6 +7,7 @@ import '../models/friend.dart';
 import '../models/friend_group.dart';
 import '../models/reaction.dart';
 import '../models/track.dart';
+import '../models/user_search_result.dart';
 import '../services/contacts_service.dart';
 import 'friends_repository.dart';
 
@@ -100,6 +101,56 @@ class SupabaseFriendsRepository implements FriendsRepository {
       'user_id': _uid,
       'friend_id': profileId,
     });
+  }
+
+  @override
+  Future<void> addFriendById(String profileId) async {
+    if (profileId == _uid) return;
+    await _db.from('friendships').upsert({
+      'user_id': _uid,
+      'friend_id': profileId,
+    });
+  }
+
+  @override
+  Future<String?> myFriendCode() async {
+    final row = await _db
+        .from('profiles')
+        .select('friend_code')
+        .eq('id', _uid)
+        .single();
+    return row['friend_code'] as String?;
+  }
+
+  @override
+  Future<List<UserSearchResult>> searchUsers(String query) async {
+    final q = query.trim();
+    if (q.isEmpty) return [];
+
+    // 친구 코드는 대문자 정확히 일치, 닉네임은 부분 일치
+    final rows = await _db
+        .from('profiles')
+        .select('id, nickname, avatar_emoji, friend_code')
+        .or('friend_code.eq.${q.toUpperCase()},nickname.ilike.%$q%')
+        .neq('id', _uid)
+        .limit(20);
+
+    final friendIds = (await _db
+            .from('friendships')
+            .select('friend_id')
+            .eq('user_id', _uid))
+        .map((r) => r['friend_id'] as String)
+        .toSet();
+
+    return rows
+        .map((r) => UserSearchResult(
+              id: r['id'] as String,
+              nickname: r['nickname'] as String,
+              emoji: r['avatar_emoji'] as String? ?? '🎧',
+              friendCode: r['friend_code'] as String? ?? '',
+              alreadyFriend: friendIds.contains(r['id'] as String),
+            ))
+        .toList();
   }
 
   @override

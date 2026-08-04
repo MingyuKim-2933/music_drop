@@ -4,6 +4,7 @@ import '../config/supabase_config.dart';
 import '../models/friend.dart';
 import '../models/friend_group.dart';
 import '../models/reaction.dart';
+import '../models/user_search_result.dart';
 import '../services/contacts_service.dart';
 import 'friends_repository.dart';
 import 'supabase_friends_repository.dart';
@@ -30,6 +31,17 @@ class RoutedFriendsRepository implements FriendsRepository {
 
   @override
   Future<void> addFriend(ContactMatch match) => _active.addFriend(match);
+
+  @override
+  Future<void> addFriendById(String profileId) =>
+      _active.addFriendById(profileId);
+
+  @override
+  Future<String?> myFriendCode() => _active.myFriendCode();
+
+  @override
+  Future<List<UserSearchResult>> searchUsers(String query) =>
+      _active.searchUsers(query);
 
   @override
   Future<bool> isMyPhoneRegistered() => _active.isMyPhoneRegistered();

@@ -2,6 +2,7 @@ import '../models/friend.dart';
 import '../models/friend_group.dart';
 import '../models/reaction.dart';
 import '../models/track.dart';
+import '../models/user_search_result.dart';
 import '../services/contacts_service.dart';
 
 /// 연락처 ↔ 앱 사용자 매칭 결과
@@ -30,6 +31,15 @@ abstract class FriendsRepository {
 
   /// 앱을 쓰고 있는 연락처를 친구로 추가
   Future<void> addFriend(ContactMatch match);
+
+  /// 프로필 ID로 바로 친구 추가 (코드/닉네임 검색 결과용)
+  Future<void> addFriendById(String profileId);
+
+  /// 내 친구 코드
+  Future<String?> myFriendCode();
+
+  /// 닉네임(부분 일치) 또는 친구 코드(정확히 일치)로 사용자 검색
+  Future<List<UserSearchResult>> searchUsers(String query);
 
   /// 내 전화번호 등록 여부 (등록해야 친구들이 나를 찾을 수 있다)
   Future<bool> isMyPhoneRegistered();
@@ -148,6 +158,33 @@ class MockFriendsRepository implements FriendsRepository {
       nickname: match.contact.name,
       emoji: '🎵',
     ));
+  }
+
+  @override
+  Future<void> addFriendById(String profileId) async {
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    _added.add(Friend(id: profileId, nickname: '새 친구', emoji: '🎧'));
+  }
+
+  @override
+  Future<String?> myFriendCode() async => 'MUSE01';
+
+  @override
+  Future<List<UserSearchResult>> searchUsers(String query) async {
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    const pool = [
+      UserSearchResult(
+          id: 'mock:u1', nickname: '지우', emoji: '🐰', friendCode: 'JIWOO1'),
+      UserSearchResult(
+          id: 'mock:u2', nickname: '민준', emoji: '🔥', friendCode: 'MJ2024'),
+    ];
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return [];
+    return pool
+        .where((u) =>
+            u.nickname.toLowerCase().contains(q) ||
+            u.friendCode.toLowerCase() == q)
+        .toList();
   }
 
   bool _phoneRegistered = false;
