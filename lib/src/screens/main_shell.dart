@@ -29,7 +29,7 @@ class _MainShellState extends State<MainShell> {
           NavigationDestination(
             icon: Icon(Icons.headphones_outlined),
             selectedIcon: Icon(Icons.headphones),
-            label: '듣는중',
+            label: '홈',
           ),
           NavigationDestination(
             icon: Icon(Icons.queue_music_outlined),

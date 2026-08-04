@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>듣는중</string>
+	<string>MUSE</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>soundmate</string>
+	<string>muse</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -46,7 +46,7 @@
 				<!-- 카카오 로그인 콜백 -->
 				<string>kakao3404dd9da9878ef06a402c36795cb1c0</string>
 				<!-- 네이버 로그인 콜백 -->
-				<string>soundmatenaver</string>
+				<string>musenaver</string>
 			</array>
 		</dict>
 	</array>
@@ -56,9 +56,9 @@
 	<key>NidClientSecret</key>
 	<string>NAVER_CLIENT_SECRET</string>
 	<key>NidAppName</key>
-	<string>듣는중</string>
+	<string>MUSE</string>
 	<key>NidUrlScheme</key>
-	<string>soundmatenaver</string>
+	<string>musenaver</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -1,4 +1,4 @@
--- 듣는중(soundmate) 초기 스키마
+-- MUSE 초기 스키마
 -- Supabase 대시보드 > SQL Editor 에 붙여넣어 실행하거나
 -- `supabase db push` 로 적용한다.
 
@@ -22,7 +22,7 @@ begin
   insert into public.profiles (id, nickname, provider)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data->>'nickname', '듣는중 유저'),
+    coalesce(new.raw_user_meta_data->>'nickname', 'MUSE 유저'),
     coalesce(new.raw_user_meta_data->>'provider', 'email')
   );
   return new;

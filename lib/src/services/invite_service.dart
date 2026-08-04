@@ -9,7 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 class InviteService {
   /// 초대 랜딩 링크. 서비스 도메인이 생기면 교체하고,
   /// ref 파라미터로 추천인 추적(딥링크 어트리뷰션)을 붙인다.
-  static const _baseUrl = 'https://github.com/MingyuKim-2933/music_drop';
+  static const _baseUrl = 'https://github.com/MingyuKim-2933/MUSE';
 
   String inviteLink({String? referrerId}) => referrerId == null
       ? _baseUrl
@@ -18,7 +18,7 @@ class InviteService {
   String inviteMessage({String? fromNickname, String? toName, String? referrerId}) {
     final greeting = toName != null ? '$toName님, ' : '';
     final from = fromNickname != null ? '$fromNickname님이 초대했어요!\n' : '';
-    return '$greeting듣는중에서 같이 음악 들어요! 🎧\n'
+    return '${greeting}MUSE에서 같이 음악 들어요! 🎧\n'
         '$from지금 무슨 노래 듣는지 친구들과 실시간으로 공유하는 앱이에요.\n'
         '${inviteLink(referrerId: referrerId)}';
   }
@@ -27,13 +27,13 @@ class InviteService {
   /// 실패 시 예외 → 호출부에서 시스템 공유 시트로 폴백.
   Future<void> shareViaKakao({String? fromNickname, String? referrerId}) async {
     final template = TextTemplate(
-      text: '듣는중에서 같이 음악 들어요! 🎧\n'
+      text: 'MUSE에서 같이 음악 들어요! 🎧\n'
           '${fromNickname != null ? '$fromNickname님이 초대했어요!' : ''}',
       link: Link(
         webUrl: Uri.parse(inviteLink(referrerId: referrerId)),
         mobileWebUrl: Uri.parse(inviteLink(referrerId: referrerId)),
       ),
-      buttonTitle: '듣는중 시작하기',
+      buttonTitle: 'MUSE 시작하기',
     );
 
     if (await ShareClient.instance.isKakaoTalkSharingAvailable()) {

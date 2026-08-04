@@ -1,4 +1,4 @@
-package kr.soundmate.soundmate
+package kr.muse.app
 
 import android.content.ComponentName
 import android.content.Context

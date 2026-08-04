@@ -174,7 +174,7 @@ class AuthService extends ChangeNotifier {
         throw Exception('이메일 또는 비밀번호가 올바르지 않아요');
       }
       final nickname =
-          res.user?.userMetadata?['nickname'] as String? ?? '듣는중 유저';
+          res.user?.userMetadata?['nickname'] as String? ?? 'MUSE 유저';
       await _saveSession(AppUser(
         id: res.user!.id,
         nickname: nickname,
@@ -256,5 +256,5 @@ class AuthService extends ChangeNotifier {
   }
 
   String _hash(String password) =>
-      sha256.convert(utf8.encode('soundmate:$password')).toString();
+      sha256.convert(utf8.encode('muse:$password')).toString();
 }

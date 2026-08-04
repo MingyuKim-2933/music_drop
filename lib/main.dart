@@ -25,11 +25,11 @@ Future<void> main() async {
       publishableKey: SupabaseConfig.publishableKey,
     );
   }
-  runApp(const SoundmateApp());
+  runApp(const MuseApp());
 }
 
-class SoundmateApp extends StatelessWidget {
-  const SoundmateApp({super.key});
+class MuseApp extends StatelessWidget {
+  const MuseApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +47,7 @@ class SoundmateApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
-        title: '듣는중',
+        title: 'MUSE',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: true,

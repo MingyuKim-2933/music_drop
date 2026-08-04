@@ -5,7 +5,7 @@
 ## 1. 프로젝트 생성 (약 2분)
 
 - [x] https://supabase.com/dashboard 접속 → 가입/로그인
-- [x] `New project` → 이름 `soundmate`, 리전 **Northeast Asia (Seoul)** 선택
+- [x] `New project` → 이름 `muse`, 리전 **Northeast Asia (Seoul)** 선택
 - [x] DB 비밀번호는 따로 보관 (앱에서는 안 씀)
 
 ## 2. 스키마 적용

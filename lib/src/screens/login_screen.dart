@@ -43,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const Spacer(flex: 2),
               const Text('🎧', style: TextStyle(fontSize: 64)),
               const SizedBox(height: 16),
-              Text('듣는중',
+              Text('MUSE',
                   style: theme.textTheme.displaySmall
                       ?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),

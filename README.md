@@ -1,4 +1,4 @@
-# 듣는중 (soundmate)
+# MUSE
 
 한국판 Airbuds — 친구들이 지금 무슨 노래를 듣는지 실시간으로 공유하는 소셜 음악 앱.
 Flutter로 작성되어 Android / iOS를 모두 지원한다.
@@ -17,7 +17,7 @@ Apple Music은 MusicKit으로 확장 가능(미구현).
 
 1. **Spotify 개발자 등록**
    - https://developer.spotify.com/dashboard 에서 앱 생성
-   - Redirect URI에 `soundmate://callback` 추가
+   - Redirect URI에 `muse://callback` 추가
    - `lib/src/services/spotify_auth.dart`의 `clientId`를 발급받은 Client ID로 교체
 
 2. **빌드 환경** (`flutter doctor`로 확인)
@@ -34,7 +34,7 @@ Apple Music은 MusicKit으로 확장 가능(미구현).
 
 4. **Android에서 멜론/지니/FLO 감지 활성화**
    - 앱 실행 → 설정 → "멜론 · 지니 · FLO · 유튜브뮤직" → 허용하기
-   - 시스템 설정에서 "듣는중"에 알림 접근 허용
+   - 시스템 설정에서 "MUSE"에 알림 접근 허용
 
 ## 구조
 
@@ -53,7 +53,7 @@ lib/
     ├── screens/                     # 홈(피드), 설정
     └── widgets/                     # NowPlayingCard, FriendTile
 
-android/app/src/main/kotlin/kr/soundmate/soundmate/
+android/app/src/main/kotlin/kr/muse/muse/
 ├── MainActivity.kt                  # MethodChannel + EventChannel
 ├── MediaNotificationListener.kt     # 알림 접근 자격용 서비스
 └── MediaSessionTracker.kt           # 음악 앱 MediaSession 구독 → Flutter로 전송

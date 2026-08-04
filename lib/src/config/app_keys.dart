@@ -9,5 +9,5 @@ class AppKeys {
   static const kakaoNativeAppKey = '3404dd9da9878ef06a402c36795cb1c0';
   static const naverClientId = 'NAVER_CLIENT_ID';
   static const naverClientSecret = 'NAVER_CLIENT_SECRET';
-  static const naverClientName = '듣는중';
+  static const naverClientName = 'MUSE';
 }

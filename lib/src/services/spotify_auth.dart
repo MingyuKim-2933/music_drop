@@ -9,11 +9,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Spotify OAuth 2.0 Authorization Code + PKCE 플로우.
 ///
 /// 사용 전에 https://developer.spotify.com/dashboard 에서 앱을 만들고
-/// Redirect URI 로 `soundmate://callback` 을 등록한 뒤
+/// Redirect URI 로 `muse://callback` 을 등록한 뒤
 /// [clientId] 를 발급받은 값으로 바꿔야 한다.
 class SpotifyAuth {
   static const clientId = '83d360c0439344838b12fa23a893f59c';
-  static const redirectUri = 'soundmate://callback';
+  static const redirectUri = 'muse://callback';
   static const _scopes = 'user-read-currently-playing user-read-recently-played';
 
   static const _kAccessToken = 'spotify_access_token';
@@ -43,7 +43,7 @@ class SpotifyAuth {
 
     final result = await FlutterWebAuth2.authenticate(
       url: authUrl.toString(),
-      callbackUrlScheme: 'soundmate',
+      callbackUrlScheme: 'muse',
     );
     final code = Uri.parse(result).queryParameters['code'];
     if (code == null) return false;

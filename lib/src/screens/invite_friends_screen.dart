@@ -125,7 +125,7 @@ class _InviteFriendsScreenState extends State<InviteFriendsScreen> {
                         ),
                       ),
                       if (appUsers.isNotEmpty) ...[
-                        _SectionTitle('듣는중을 쓰고 있는 친구 (${appUsers.length})'),
+                        _SectionTitle('MUSE를 쓰고 있는 친구 (${appUsers.length})'),
                         for (final m in appUsers)
                           _ContactTile(
                             match: m,

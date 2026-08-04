@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('듣는중 🎧',
+        title: const Text('MUSE 🎧',
             style: TextStyle(fontWeight: FontWeight.w800)),
         actions: [
           IconButton(

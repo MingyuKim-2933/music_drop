@@ -10,8 +10,8 @@ import '../models/track.dart';
 /// Android 알림 접근 권한(MediaSessionManager)으로 기기에서 직접
 /// "지금 재생 중" 메타데이터를 읽는다. iOS에서는 동작하지 않는다.
 class MediaSessionChannel {
-  static const _method = MethodChannel('soundmate/media');
-  static const _events = EventChannel('soundmate/media_events');
+  static const _method = MethodChannel('muse/media');
+  static const _events = EventChannel('muse/media_events');
 
   static bool get isSupported => Platform.isAndroid;
 

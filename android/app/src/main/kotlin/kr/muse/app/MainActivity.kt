@@ -1,4 +1,4 @@
-package kr.soundmate.soundmate
+package kr.muse.app
 
 import android.content.ComponentName
 import android.content.Context
@@ -15,7 +15,7 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "soundmate/media")
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "muse/media")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "hasNotificationAccess" -> result.success(hasNotificationAccess())
@@ -27,7 +27,7 @@ class MainActivity : FlutterActivity() {
                 }
             }
 
-        EventChannel(flutterEngine.dartExecutor.binaryMessenger, "soundmate/media_events")
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, "muse/media_events")
             .setStreamHandler(object : EventChannel.StreamHandler {
                 override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
                     if (hasNotificationAccess()) {
