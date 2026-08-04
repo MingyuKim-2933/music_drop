@@ -33,7 +33,12 @@ revoke execute on function public.match_contacts(text[]) from anon;
 grant execute on function public.match_contacts(text[]) to authenticated;
 
 -- 컬럼 자체의 조회 권한 회수 (덤프 차단)
-revoke select (phone_hash) on public.profiles from anon, authenticated;
+-- ⚠️ 컬럼 단위 revoke는 테이블 전체 select 권한이 남아 있으면 무력화된다.
+--    테이블 권한을 먼저 회수하고 허용 컬럼만 다시 부여해야 한다.
+revoke select on public.profiles from anon, authenticated;
+
+grant select (id, nickname, provider, avatar_emoji, friend_code, has_phone, created_at)
+  on public.profiles to authenticated;
 
 -- ── 3. 계정 삭제 (Google Play 필수 요건) ──────────────────
 -- auth.users 삭제 시 profiles → 플레이리스트/친구/반응까지 cascade 삭제
