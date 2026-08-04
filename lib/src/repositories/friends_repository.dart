@@ -1,4 +1,5 @@
 import '../models/friend.dart';
+import '../models/reaction.dart';
 import '../models/track.dart';
 import '../services/contacts_service.dart';
 
@@ -28,6 +29,22 @@ abstract class FriendsRepository {
 
   /// 앱을 쓰고 있는 연락처를 친구로 추가
   Future<void> addFriend(ContactMatch match);
+
+  /// 내 전화번호 등록 여부 (등록해야 친구들이 나를 찾을 수 있다)
+  Future<bool> isMyPhoneRegistered();
+
+  /// 내 전화번호(E.164)를 해시로 등록
+  Future<void> registerMyPhone(String e164);
+
+  /// 친구에게 이모지 반응 보내기
+  Future<void> sendReaction({
+    required String toUserId,
+    String emoji,
+    String? trackTitle,
+  });
+
+  /// 내가 받은 반응 목록 (최신순)
+  Future<List<Reaction>> fetchReceivedReactions();
 }
 
 class MockFriendsRepository implements FriendsRepository {
@@ -121,5 +138,37 @@ class MockFriendsRepository implements FriendsRepository {
       nickname: match.contact.name,
       emoji: '🎵',
     ));
+  }
+
+  bool _phoneRegistered = false;
+
+  @override
+  Future<bool> isMyPhoneRegistered() async => _phoneRegistered;
+
+  @override
+  Future<void> registerMyPhone(String e164) async {
+    _phoneRegistered = true;
+  }
+
+  @override
+  Future<void> sendReaction({
+    required String toUserId,
+    String emoji = '🫶',
+    String? trackTitle,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+  }
+
+  @override
+  Future<List<Reaction>> fetchReceivedReactions() async {
+    return [
+      Reaction(
+        id: 'mock:1',
+        fromNickname: '지우',
+        emoji: '🫶',
+        trackTitle: 'Supernova',
+        createdAt: DateTime.now().subtract(const Duration(minutes: 30)),
+      ),
+    ];
   }
 }

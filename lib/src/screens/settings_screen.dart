@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../repositories/friends_repository.dart';
 import '../services/auth_service.dart';
 import '../services/media_session_channel.dart';
 import '../services/now_playing_service.dart';
 import '../services/spotify_auth.dart';
+import '../widgets/phone_register_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -15,6 +17,13 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _busy = false;
+  late Future<bool> _phoneRegistered;
+
+  @override
+  void initState() {
+    super.initState();
+    _phoneRegistered = context.read<FriendsRepository>().isMyPhoneRegistered();
+  }
 
   Future<void> _connectSpotify() async {
     setState(() => _busy = true);
@@ -86,6 +95,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
                 child: const Text('로그아웃'),
               ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text('친구 찾기',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleSmall
+                  ?.copyWith(color: Colors.white54)),
+          const SizedBox(height: 8),
+          Card(
+            color: const Color(0xFF1A1526),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            child: FutureBuilder<bool>(
+              future: _phoneRegistered,
+              builder: (context, snapshot) {
+                final registered = snapshot.data ?? false;
+                return ListTile(
+                  leading: const Icon(Icons.phone_iphone,
+                      color: Colors.white70),
+                  title: const Text('내 전화번호 등록'),
+                  subtitle: Text(
+                    registered
+                        ? '등록됨 · 친구들이 연락처로 나를 찾을 수 있어요'
+                        : '등록하면 친구들이 연락처로 나를 찾을 수 있어요',
+                  ),
+                  trailing: registered
+                      ? const Icon(Icons.check_circle,
+                          color: Color(0xFF00CD3C))
+                      : TextButton(
+                          onPressed: () async {
+                            final ok =
+                                await showPhoneRegisterDialog(context);
+                            if (ok == true && mounted) {
+                              setState(() {
+                                _phoneRegistered = context
+                                    .read<FriendsRepository>()
+                                    .isMyPhoneRegistered();
+                              });
+                            }
+                          },
+                          child: const Text('등록'),
+                        ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 24),

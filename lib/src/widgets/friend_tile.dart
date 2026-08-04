@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/friend.dart';
+import '../repositories/friends_repository.dart';
 import 'now_playing_card.dart';
 
 /// 친구 피드의 한 줄
@@ -107,13 +109,24 @@ class FriendTile extends StatelessWidget {
             icon: const Text('🫶', style: TextStyle(fontSize: 18)),
             onPressed: np == null
                 ? null
-                : () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${friend.nickname}님에게 반응을 보냈어요!'),
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
+                : () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    try {
+                      await context.read<FriendsRepository>().sendReaction(
+                            toUserId: friend.id,
+                            trackTitle: np.title,
+                          );
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text('${friend.nickname}님에게 🫶 보냈어요!'),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    } catch (_) {
+                      messenger.showSnackBar(
+                        const SnackBar(content: Text('반응 전송에 실패했어요')),
+                      );
+                    }
                   },
           ),
         ],

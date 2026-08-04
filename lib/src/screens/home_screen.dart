@@ -25,6 +25,88 @@ class _HomeScreenState extends State<HomeScreen> {
     _friends = context.read<FriendsRepository>().fetchFriends();
   }
 
+  void _showReactions(BuildContext context) {
+    final future = context.read<FriendsRepository>().fetchReceivedReactions();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A1526),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          child: FutureBuilder(
+            future: future,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const SizedBox(
+                  height: 160,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              final reactions = snapshot.data!;
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('받은 반응',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 12),
+                  if (reactions.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 30),
+                      child: Center(
+                        child: Text('아직 받은 반응이 없어요',
+                            style: TextStyle(color: Colors.white54)),
+                      ),
+                    )
+                  else
+                    Flexible(
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+                          for (final r in reactions)
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Text(r.emoji,
+                                  style: const TextStyle(fontSize: 22)),
+                              title: Text(
+                                r.trackTitle != null
+                                    ? '${r.fromNickname}님이 "${r.trackTitle}" 듣는 걸 좋아했어요'
+                                    : '${r.fromNickname}님이 반응을 보냈어요',
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              subtitle: Text(
+                                _timeAgo(r.createdAt),
+                                style: const TextStyle(
+                                    color: Colors.white38, fontSize: 12),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _timeAgo(DateTime t) {
+    final diff = DateTime.now().difference(t);
+    if (diff.inMinutes < 1) return '방금';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}분 전';
+    if (diff.inHours < 24) return '${diff.inHours}시간 전';
+    return '${diff.inDays}일 전';
+  }
+
   Future<void> _refresh() async {
     setState(() {
       _friends = context.read<FriendsRepository>().fetchFriends();
@@ -42,6 +124,11 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('MUSE 🎧',
             style: TextStyle(fontWeight: FontWeight.w800)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.favorite_border),
+            tooltip: '받은 반응',
+            onPressed: () => _showReactions(context),
+          ),
           IconButton(
             icon: const Icon(Icons.person_add_alt_1_outlined),
             tooltip: '친구 찾기',

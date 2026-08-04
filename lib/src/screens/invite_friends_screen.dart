@@ -5,6 +5,7 @@ import '../repositories/friends_repository.dart';
 import '../services/auth_service.dart';
 import '../services/contacts_service.dart';
 import '../widgets/invite_sheet.dart';
+import '../widgets/phone_register_dialog.dart';
 
 class InviteFriendsScreen extends StatefulWidget {
   const InviteFriendsScreen({super.key});
@@ -18,6 +19,7 @@ class _InviteFriendsScreenState extends State<InviteFriendsScreen> {
 
   bool _loading = true;
   bool _permissionDenied = false;
+  bool _phoneRegistered = true; // 확인 전에는 배너 숨김
   List<ContactMatch> _matches = [];
   final Set<String> _addedPhones = {};
 
@@ -25,6 +27,13 @@ class _InviteFriendsScreenState extends State<InviteFriendsScreen> {
   void initState() {
     super.initState();
     _load();
+    _checkPhone();
+  }
+
+  Future<void> _checkPhone() async {
+    final registered =
+        await context.read<FriendsRepository>().isMyPhoneRegistered();
+    if (mounted) setState(() => _phoneRegistered = registered);
   }
 
   Future<void> _load() async {
@@ -124,6 +133,36 @@ class _InviteFriendsScreenState extends State<InviteFriendsScreen> {
                           },
                         ),
                       ),
+                      if (!_phoneRegistered)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            color: const Color(0xFF1A1526),
+                            border: Border.all(
+                                color: const Color(0xFF7C4DFF), width: 1),
+                          ),
+                          child: ListTile(
+                            leading: const Text('📱',
+                                style: TextStyle(fontSize: 22)),
+                            title: const Text('내 번호를 등록해 보세요',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14)),
+                            subtitle: const Text(
+                                '친구들이 연락처로 나를 찾을 수 있어요',
+                                style: TextStyle(
+                                    color: Colors.white54, fontSize: 12)),
+                            trailing: TextButton(
+                              onPressed: () async {
+                                final ok =
+                                    await showPhoneRegisterDialog(context);
+                                if (ok == true) _checkPhone();
+                              },
+                              child: const Text('등록'),
+                            ),
+                          ),
+                        ),
                       if (appUsers.isNotEmpty) ...[
                         _SectionTitle('MUSE를 쓰고 있는 친구 (${appUsers.length})'),
                         for (final m in appUsers)

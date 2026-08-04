@@ -4,6 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/friend.dart';
+import '../models/reaction.dart';
 import '../models/track.dart';
 import '../services/contacts_service.dart';
 import 'friends_repository.dart';
@@ -100,10 +101,55 @@ class SupabaseFriendsRepository implements FriendsRepository {
     });
   }
 
-  /// 내 전화번호를 등록해 친구들이 나를 찾을 수 있게 한다
+  @override
+  Future<bool> isMyPhoneRegistered() async {
+    final row = await _db
+        .from('profiles')
+        .select('phone_hash')
+        .eq('id', _uid)
+        .single();
+    return row['phone_hash'] != null;
+  }
+
+  @override
   Future<void> registerMyPhone(String e164) async {
     await _db
         .from('profiles')
         .update({'phone_hash': phoneHash(e164)}).eq('id', _uid);
+  }
+
+  @override
+  Future<void> sendReaction({
+    required String toUserId,
+    String emoji = '🫶',
+    String? trackTitle,
+  }) async {
+    await _db.from('reactions').insert({
+      'from_user': _uid,
+      'to_user': toUserId,
+      'emoji': emoji,
+      'track_title': trackTitle,
+    });
+  }
+
+  @override
+  Future<List<Reaction>> fetchReceivedReactions() async {
+    final rows = await _db
+        .from('reactions')
+        .select('id, emoji, track_title, created_at, '
+            'sender:profiles!reactions_from_user_fkey(nickname)')
+        .eq('to_user', _uid)
+        .order('created_at', ascending: false)
+        .limit(30);
+    return rows
+        .map((r) => Reaction(
+              id: r['id'] as String,
+              fromNickname:
+                  (r['sender'] as Map?)?['nickname'] as String? ?? '알 수 없음',
+              emoji: r['emoji'] as String? ?? '🫶',
+              trackTitle: r['track_title'] as String?,
+              createdAt: DateTime.parse(r['created_at'] as String),
+            ))
+        .toList();
   }
 }
