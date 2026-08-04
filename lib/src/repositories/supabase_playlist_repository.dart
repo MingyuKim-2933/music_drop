@@ -12,7 +12,7 @@ class SupabasePlaylistRepository implements PlaylistRepository {
 
   static const _select =
       '*, playlist_songs(*), playlist_likes(count), '
-      'forks:playlists!playlists_forked_from_fkey(count), '
+      'forks:playlists!forked_from(count), '
       'profiles!playlists_owner_id_fkey(nickname)';
 
   @override
