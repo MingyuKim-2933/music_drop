@@ -2,18 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:provider/provider.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show Supabase;
+
 import 'src/config/app_keys.dart';
+import 'src/config/supabase_config.dart';
 import 'src/repositories/friends_repository.dart';
 import 'src/repositories/playlist_repository.dart';
+import 'src/repositories/routed_playlist_repository.dart';
 import 'src/screens/login_screen.dart';
 import 'src/screens/main_shell.dart';
 import 'src/services/auth_service.dart';
 import 'src/services/now_playing_service.dart';
 import 'src/services/spotify_auth.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   KakaoSdk.init(nativeAppKey: AppKeys.kakaoNativeAppKey);
+  if (SupabaseConfig.isConfigured) {
+    await Supabase.initialize(
+      url: SupabaseConfig.url,
+      publishableKey: SupabaseConfig.publishableKey,
+    );
+  }
   runApp(const SoundmateApp());
 }
 
@@ -26,7 +37,8 @@ class SoundmateApp extends StatelessWidget {
       providers: [
         Provider<SpotifyAuth>(create: (_) => SpotifyAuth()),
         Provider<FriendsRepository>(create: (_) => MockFriendsRepository()),
-        Provider<PlaylistRepository>(create: (_) => LocalPlaylistRepository()),
+        Provider<PlaylistRepository>(
+            create: (_) => RoutedPlaylistRepository()),
         ChangeNotifierProvider<AuthService>(
           create: (_) => AuthService()..restoreSession(),
         ),
