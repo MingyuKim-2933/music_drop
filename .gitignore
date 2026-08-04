@@ -48,3 +48,7 @@ app.*.map.json
 docs/.obsidian/workspace.json
 docs/.obsidian/workspace-mobile.json
 docs/.obsidian/cache
+
+# 릴리즈 서명 키 — 절대 커밋 금지 (분실 시 앱 업데이트 불가하니 별도 백업 필수)
+android/upload-keystore.jks
+android/key.properties
