@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/reaction_notification_service.dart';
 import 'home_screen.dart';
 import 'playlists_screen.dart';
 
@@ -13,6 +14,19 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _index = 0;
+  final _reactionNotifications = ReactionNotificationService();
+
+  @override
+  void initState() {
+    super.initState();
+    _reactionNotifications.start();
+  }
+
+  @override
+  void dispose() {
+    _reactionNotifications.stop();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
