@@ -6,6 +6,7 @@ import '../models/friend_group.dart';
 import '../models/track.dart';
 import '../repositories/friends_repository.dart';
 import '../services/now_playing_service.dart';
+import '../widgets/error_retry.dart';
 import '../widgets/friend_tile.dart';
 import '../widgets/now_playing_card.dart';
 import 'friend_groups_screen.dart';
@@ -222,6 +223,15 @@ class _HomeScreenState extends State<HomeScreen> {
             FutureBuilder<List<Friend>>(
               future: _friends,
               builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return ErrorRetry(
+                    message: '친구 목록을 불러오지 못했어요',
+                    onRetry: () => setState(() {
+                      _friends =
+                          context.read<FriendsRepository>().fetchFriends();
+                    }),
+                  );
+                }
                 if (!snapshot.hasData) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 40),

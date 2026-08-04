@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../config/legal_links.dart';
+import '../widgets/delete_account_dialog.dart';
 
 import '../repositories/friends_repository.dart';
 import '../services/auth_service.dart';
@@ -220,6 +224,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 24),
+          Text('약관 및 정책',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleSmall
+                  ?.copyWith(color: Colors.white54)),
+          const SizedBox(height: 8),
+          Card(
+            color: const Color(0xFF1A1526),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.description_outlined,
+                      color: Colors.white70),
+                  title: const Text('서비스 이용약관'),
+                  trailing: const Icon(Icons.open_in_new, size: 16),
+                  onTap: () => launchUrl(Uri.parse(LegalLinks.terms),
+                      mode: LaunchMode.externalApplication),
+                ),
+                const Divider(height: 1, color: Colors.white10),
+                ListTile(
+                  leading: const Icon(Icons.privacy_tip_outlined,
+                      color: Colors.white70),
+                  title: const Text('개인정보처리방침'),
+                  trailing: const Icon(Icons.open_in_new, size: 16),
+                  onTap: () => launchUrl(Uri.parse(LegalLinks.privacy),
+                      mode: LaunchMode.externalApplication),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text('위험 구역',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleSmall
+                  ?.copyWith(color: Colors.redAccent.withValues(alpha: 0.8))),
+          const SizedBox(height: 8),
+          Card(
+            color: const Color(0xFF1A1526),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                  color: Colors.redAccent.withValues(alpha: 0.3)),
+            ),
+            child: ListTile(
+              leading:
+                  const Icon(Icons.delete_forever, color: Colors.redAccent),
+              title: const Text('계정 삭제'),
+              subtitle: const Text('계정과 모든 데이터가 영구 삭제돼요',
+                  style: TextStyle(color: Colors.white38, fontSize: 12)),
+              onTap: () async {
+                final deleted = await showDeleteAccountDialog(context);
+                if (deleted == true && context.mounted) {
+                  Navigator.of(context).popUntil((r) => r.isFirst);
+                }
+              },
+            ),
+          ),
+          const SizedBox(height: 32),
         ],
       ),
     );

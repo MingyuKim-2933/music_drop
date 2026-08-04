@@ -67,19 +67,20 @@ class SupabaseFriendsRepository implements FriendsRepository {
       for (final c in contacts) phoneHash(c.phone): c,
     };
 
-    // in 필터는 URL 길이 제한이 있으므로 나눠서 조회
+    // 매칭은 서버 함수로만 가능 (phone_hash 직접 조회는 차단되어 있음).
+    // 내가 보낸 해시와 일치하는 것만 돌려주므로 전체 덤프가 불가능하다.
     final matched = <String, String>{}; // phone_hash → profile id
     final hashes = hashToContact.keys.toList();
-    for (var i = 0; i < hashes.length; i += 100) {
+    for (var i = 0; i < hashes.length; i += 500) {
       final chunk = hashes.sublist(
-          i, i + 100 > hashes.length ? hashes.length : i + 100);
-      final rows = await _db
-          .from('profiles')
-          .select('id, phone_hash')
-          .inFilter('phone_hash', chunk)
-          .neq('id', _uid);
+          i, i + 500 > hashes.length ? hashes.length : i + 500);
+      final rows = await _db.rpc<List<dynamic>>(
+        'match_contacts',
+        params: {'hashes': chunk},
+      );
       for (final r in rows) {
-        matched[r['phone_hash'] as String] = r['id'] as String;
+        final row = Map<String, dynamic>.from(r as Map);
+        matched[row['phone_hash'] as String] = row['id'] as String;
       }
     }
 
@@ -155,12 +156,10 @@ class SupabaseFriendsRepository implements FriendsRepository {
 
   @override
   Future<bool> isMyPhoneRegistered() async {
-    final row = await _db
-        .from('profiles')
-        .select('phone_hash')
-        .eq('id', _uid)
-        .single();
-    return row['phone_hash'] != null;
+    // phone_hash는 조회 권한이 없으므로 등록 여부만 나타내는 파생 컬럼을 읽는다
+    final row =
+        await _db.from('profiles').select('has_phone').eq('id', _uid).single();
+    return row['has_phone'] as bool? ?? false;
   }
 
   @override

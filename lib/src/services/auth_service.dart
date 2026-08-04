@@ -224,6 +224,22 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 계정 완전 삭제 (Google Play 요구사항).
+  /// 서버에서 auth.users를 지우면 프로필·플레이리스트·친구·반응이 함께 삭제된다.
+  Future<void> deleteAccount() async {
+    if (!_useSupabase || _sb.auth.currentUser == null) {
+      throw Exception('로그인 상태에서만 삭제할 수 있어요');
+    }
+    await _sb.rpc('delete_my_account');
+    await signOut();
+
+    // 이메일 목업 계정 잔여 데이터도 정리
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kEmailUsers);
+    await prefs.remove('playlists_mine');
+    await prefs.remove('playlists_liked_ids');
+  }
+
   /// Supabase 프로필 upsert (소셜 로그인 시 트리거가 못 채우는 정보 보강)
   Future<void> _upsertProfile({
     required String nickname,

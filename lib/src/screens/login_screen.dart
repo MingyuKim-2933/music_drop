@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../config/legal_links.dart';
 import '../services/auth_service.dart';
 import 'email_auth_screen.dart';
 
@@ -85,16 +87,53 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
               if (_busy) const CircularProgressIndicator(),
               const Spacer(),
-              Text(
-                '시작하면 서비스 이용약관과 개인정보 처리방침에 동의하게 돼요',
-                textAlign: TextAlign.center,
-                style:
-                    theme.textTheme.labelSmall?.copyWith(color: Colors.white30),
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text('시작하면 ',
+                      style: theme.textTheme.labelSmall
+                          ?.copyWith(color: Colors.white30)),
+                  _LegalLink(
+                      label: '서비스 이용약관', url: LegalLinks.terms),
+                  Text('과 ',
+                      style: theme.textTheme.labelSmall
+                          ?.copyWith(color: Colors.white30)),
+                  _LegalLink(
+                      label: '개인정보처리방침', url: LegalLinks.privacy),
+                  Text('에 동의하게 돼요',
+                      style: theme.textTheme.labelSmall
+                          ?.copyWith(color: Colors.white30)),
+                ],
               ),
               const SizedBox(height: 16),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 약관/정책 문서로 이동하는 작은 링크
+class _LegalLink extends StatelessWidget {
+  const _LegalLink({required this.label, required this.url});
+
+  final String label;
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () =>
+          launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Colors.white70,
+              decoration: TextDecoration.underline,
+              decorationColor: Colors.white38,
+            ),
       ),
     );
   }

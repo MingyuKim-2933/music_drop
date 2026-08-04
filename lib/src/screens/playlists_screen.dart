@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../models/playlist.dart';
 import '../repositories/playlist_repository.dart';
 import '../services/auth_service.dart';
+import '../widgets/error_retry.dart';
 import 'playlist_detail_screen.dart';
 
 class PlaylistsScreen extends StatefulWidget {
@@ -24,6 +25,7 @@ class _PlaylistsScreenState extends State<PlaylistsScreen>
   List<Playlist> _mine = [];
   List<Playlist> _explore = [];
   bool _loading = true;
+  bool _failed = false;
 
   @override
   void initState() {
@@ -42,25 +44,38 @@ class _PlaylistsScreenState extends State<PlaylistsScreen>
 
   Future<void> _load() async {
     final repo = context.read<PlaylistRepository>();
-    final results = await Future.wait([
-      repo.fetchMyPlaylists(),
-      repo.fetchExplore(query: _searchController.text),
-    ]);
-    if (!mounted) return;
-    setState(() {
-      _mine = results[0];
-      _explore = results[1];
-      _loading = false;
-    });
+    if (mounted) setState(() => _failed = false);
+    try {
+      final results = await Future.wait([
+        repo.fetchMyPlaylists(),
+        repo.fetchExplore(query: _searchController.text),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _mine = results[0];
+        _explore = results[1];
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _failed = true;
+      });
+    }
   }
 
   void _onSearchChanged(String _) {
     _searchDebounce?.cancel();
     _searchDebounce = Timer(const Duration(milliseconds: 400), () async {
-      final explore = await context
-          .read<PlaylistRepository>()
-          .fetchExplore(query: _searchController.text);
-      if (mounted) setState(() => _explore = explore);
+      try {
+        final explore = await context
+            .read<PlaylistRepository>()
+            .fetchExplore(query: _searchController.text);
+        if (mounted) setState(() => _explore = explore);
+      } catch (_) {
+        if (mounted) setState(() => _failed = true);
+      }
     });
   }
 
@@ -109,7 +124,15 @@ class _PlaylistsScreenState extends State<PlaylistsScreen>
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
+          : _failed
+              ? ErrorRetry(
+                  message: '플레이리스트를 불러오지 못했어요',
+                  onRetry: () {
+                    setState(() => _loading = true);
+                    _load();
+                  },
+                )
+              : TabBarView(
               controller: _tab,
               children: [
                 // ── 내 플레이리스트 (드래그로 순서 변경) ──
