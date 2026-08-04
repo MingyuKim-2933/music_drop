@@ -11,8 +11,12 @@ import '../models/song.dart';
 /// "둘러보기"(다른 사람 플레이리스트)·좋아요·퍼가기 집계는
 /// 백엔드가 붙기 전까지 목업으로 동작한다.
 abstract class PlaylistRepository {
+  /// 내 플레이리스트 (수동 정렬 순서 반영)
   Future<List<Playlist>> fetchMyPlaylists();
-  Future<List<Playlist>> fetchExplore();
+
+  /// 둘러보기 — 좋아요 많은 순 정렬, [query]로 제목 검색
+  Future<List<Playlist>> fetchExplore({String? query});
+
   Future<Playlist> createPlaylist({
     required String title,
     required String emoji,
@@ -20,8 +24,18 @@ abstract class PlaylistRepository {
     required String ownerNickname,
   });
   Future<void> deletePlaylist(String id);
+
+  /// 이름/이모지 변경
+  Future<Playlist> updatePlaylist(String id, {String? title, String? emoji});
+
+  /// 내 플레이리스트 수동 정렬 (표시 순서대로 id 목록 전달)
+  Future<void> reorderMyPlaylists(List<String> orderedIds);
+
   Future<Playlist> addSong(String playlistId, Song song);
   Future<Playlist> removeSong(String playlistId, int trackId);
+
+  /// 곡 순서 변경 (표시 순서대로 trackId 목록 전달)
+  Future<Playlist> reorderSongs(String playlistId, List<int> orderedTrackIds);
 
   /// 좋아요 토글. 토글 후 상태 반환.
   Future<Playlist> toggleLike(Playlist playlist);
@@ -54,8 +68,42 @@ class LocalPlaylistRepository implements PlaylistRepository {
   Future<List<Playlist>> fetchMyPlaylists() async {
     final prefs = await SharedPreferences.getInstance();
     final mine = await _loadMine(prefs);
-    mine.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    mine.sort((a, b) => a.sortOrder != b.sortOrder
+        ? a.sortOrder.compareTo(b.sortOrder)
+        : b.updatedAt.compareTo(a.updatedAt));
     return mine;
+  }
+
+  @override
+  Future<Playlist> updatePlaylist(String id,
+      {String? title, String? emoji}) async {
+    return _update(id, (p) => p.copyWith(
+          title: title,
+          emoji: emoji,
+          updatedAt: DateTime.now(),
+        ));
+  }
+
+  @override
+  Future<void> reorderMyPlaylists(List<String> orderedIds) async {
+    final prefs = await SharedPreferences.getInstance();
+    final mine = await _loadMine(prefs);
+    for (var i = 0; i < mine.length; i++) {
+      final order = orderedIds.indexOf(mine[i].id);
+      mine[i] = mine[i].copyWith(sortOrder: order == -1 ? 999 : order);
+    }
+    await _saveMine(prefs, mine);
+  }
+
+  @override
+  Future<Playlist> reorderSongs(
+      String playlistId, List<int> orderedTrackIds) async {
+    return _update(playlistId, (p) {
+      final songs = [...p.songs]..sort((a, b) => orderedTrackIds
+          .indexOf(a.trackId)
+          .compareTo(orderedTrackIds.indexOf(b.trackId)));
+      return p.copyWith(songs: songs, updatedAt: DateTime.now());
+    });
   }
 
   @override
@@ -161,15 +209,25 @@ class LocalPlaylistRepository implements PlaylistRepository {
   // ── 둘러보기 목업 (백엔드 도입 시 서버 데이터로 교체) ──
 
   @override
-  Future<List<Playlist>> fetchExplore() async {
+  Future<List<Playlist>> fetchExplore({String? query}) async {
     await Future<void>.delayed(const Duration(milliseconds: 300));
     final prefs = await SharedPreferences.getInstance();
     final liked = (prefs.getStringList(_kLiked) ?? []).toSet();
-    return _explorePlaylists
+    var result = _explorePlaylists
         .map((p) => liked.contains(p.id)
             ? p.copyWith(likedByMe: true, likeCount: p.likeCount + 1)
             : p)
         .toList();
+    final q = query?.trim().toLowerCase();
+    if (q != null && q.isNotEmpty) {
+      result = result
+          .where((p) =>
+              p.title.toLowerCase().contains(q) ||
+              p.ownerNickname.toLowerCase().contains(q))
+          .toList();
+    }
+    result.sort((a, b) => b.likeCount.compareTo(a.likeCount));
+    return result;
   }
 
   static final _explorePlaylists = [

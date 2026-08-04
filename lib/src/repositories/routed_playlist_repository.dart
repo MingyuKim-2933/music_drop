@@ -24,7 +24,20 @@ class RoutedPlaylistRepository implements PlaylistRepository {
   Future<List<Playlist>> fetchMyPlaylists() => _active.fetchMyPlaylists();
 
   @override
-  Future<List<Playlist>> fetchExplore() => _active.fetchExplore();
+  Future<List<Playlist>> fetchExplore({String? query}) =>
+      _active.fetchExplore(query: query);
+
+  @override
+  Future<Playlist> updatePlaylist(String id, {String? title, String? emoji}) =>
+      _active.updatePlaylist(id, title: title, emoji: emoji);
+
+  @override
+  Future<void> reorderMyPlaylists(List<String> orderedIds) =>
+      _active.reorderMyPlaylists(orderedIds);
+
+  @override
+  Future<Playlist> reorderSongs(String playlistId, List<int> orderedTrackIds) =>
+      _active.reorderSongs(playlistId, orderedTrackIds);
 
   @override
   Future<Playlist> createPlaylist({

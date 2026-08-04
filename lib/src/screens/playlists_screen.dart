@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -16,6 +18,9 @@ class PlaylistsScreen extends StatefulWidget {
 class _PlaylistsScreenState extends State<PlaylistsScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tab;
+  final _searchController = TextEditingController();
+  Timer? _searchDebounce;
+
   List<Playlist> _mine = [];
   List<Playlist> _explore = [];
   bool _loading = true;
@@ -30,6 +35,8 @@ class _PlaylistsScreenState extends State<PlaylistsScreen>
   @override
   void dispose() {
     _tab.dispose();
+    _searchController.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -37,7 +44,7 @@ class _PlaylistsScreenState extends State<PlaylistsScreen>
     final repo = context.read<PlaylistRepository>();
     final results = await Future.wait([
       repo.fetchMyPlaylists(),
-      repo.fetchExplore(),
+      repo.fetchExplore(query: _searchController.text),
     ]);
     if (!mounted) return;
     setState(() {
@@ -47,10 +54,20 @@ class _PlaylistsScreenState extends State<PlaylistsScreen>
     });
   }
 
+  void _onSearchChanged(String _) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () async {
+      final explore = await context
+          .read<PlaylistRepository>()
+          .fetchExplore(query: _searchController.text);
+      if (mounted) setState(() => _explore = explore);
+    });
+  }
+
   Future<void> _createPlaylist() async {
     final result = await showDialog<(String, String)>(
       context: context,
-      builder: (_) => const _CreatePlaylistDialog(),
+      builder: (_) => const PlaylistFormDialog(),
     );
     if (result == null || !mounted) return;
     final me = context.read<AuthService>().user;
@@ -61,6 +78,16 @@ class _PlaylistsScreenState extends State<PlaylistsScreen>
           ownerNickname: me?.nickname ?? '나',
         );
     await _load();
+  }
+
+  Future<void> _onReorder(int oldIndex, int newIndex) async {
+    setState(() {
+      final item = _mine.removeAt(oldIndex);
+      _mine.insert(newIndex, item);
+    });
+    await context
+        .read<PlaylistRepository>()
+        .reorderMyPlaylists(_mine.map((p) => p.id).toList());
   }
 
   @override
@@ -85,15 +112,77 @@ class _PlaylistsScreenState extends State<PlaylistsScreen>
           : TabBarView(
               controller: _tab,
               children: [
-                _PlaylistList(
-                  playlists: _mine,
-                  emptyMessage: '첫 플레이리스트를 만들어 보세요!',
-                  onChanged: _load,
-                ),
-                _PlaylistList(
-                  playlists: _explore,
-                  emptyMessage: '아직 둘러볼 플레이리스트가 없어요',
-                  onChanged: _load,
+                // ── 내 플레이리스트 (드래그로 순서 변경) ──
+                _mine.isEmpty
+                    ? const Center(
+                        child: Text('첫 플레이리스트를 만들어 보세요!',
+                            style: TextStyle(color: Colors.white54)),
+                      )
+                    : ReorderableListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
+                        itemCount: _mine.length,
+                        onReorderItem: _onReorder,
+                        proxyDecorator: (child, _, _) => Material(
+                          color: Colors.transparent,
+                          child: child,
+                        ),
+                        itemBuilder: (context, i) => Padding(
+                          key: ValueKey(_mine[i].id),
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _PlaylistTile(
+                            playlist: _mine[i],
+                            showDragHandle: true,
+                            index: i,
+                            onChanged: _load,
+                          ),
+                        ),
+                      ),
+                // ── 둘러보기 (검색 + 좋아요순) ──
+                Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: _onSearchChanged,
+                        decoration: InputDecoration(
+                          hintText: '플레이리스트 검색',
+                          prefixIcon: const Icon(Icons.search, size: 20),
+                          isDense: true,
+                          filled: true,
+                          fillColor: const Color(0xFF1A1526),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: _explore.isEmpty
+                          ? Center(
+                              child: Text(
+                                _searchController.text.isEmpty
+                                    ? '아직 둘러볼 플레이리스트가 없어요'
+                                    : '검색 결과가 없어요',
+                                style:
+                                    const TextStyle(color: Colors.white54),
+                              ),
+                            )
+                          : ListView.builder(
+                              padding:
+                                  const EdgeInsets.fromLTRB(16, 8, 16, 90),
+                              itemCount: _explore.length,
+                              itemBuilder: (context, i) => Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: _PlaylistTile(
+                                  playlist: _explore[i],
+                                  onChanged: _load,
+                                ),
+                              ),
+                            ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -101,88 +190,96 @@ class _PlaylistsScreenState extends State<PlaylistsScreen>
   }
 }
 
-class _PlaylistList extends StatelessWidget {
-  const _PlaylistList({
-    required this.playlists,
-    required this.emptyMessage,
+class _PlaylistTile extends StatelessWidget {
+  const _PlaylistTile({
+    required this.playlist,
     required this.onChanged,
+    this.showDragHandle = false,
+    this.index = 0,
   });
 
-  final List<Playlist> playlists;
-  final String emptyMessage;
+  final Playlist playlist;
   final VoidCallback onChanged;
+  final bool showDragHandle;
+  final int index;
 
   @override
   Widget build(BuildContext context) {
-    if (playlists.isEmpty) {
-      return Center(
-        child: Text(emptyMessage,
-            style: const TextStyle(color: Colors.white54)),
-      );
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
-      itemCount: playlists.length,
-      itemBuilder: (context, i) {
-        final p = playlists[i];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1526),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Colors.white10,
-              child: Text(p.emoji, style: const TextStyle(fontSize: 20)),
+    final p = playlist;
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1526),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: Colors.white10,
+          child: Text(p.emoji, style: const TextStyle(fontSize: 20)),
+        ),
+        title: Text(p.title,
+            style: const TextStyle(fontWeight: FontWeight.w700)),
+        subtitle: Text(
+          '${p.ownerNickname} · ${p.songs.length}곡'
+          '${p.forkedFromTitle != null ? ' · 퍼옴' : ''}',
+          style: const TextStyle(color: Colors.white38, fontSize: 12),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              p.likedByMe ? Icons.favorite : Icons.favorite_border,
+              size: 15,
+              color: p.likedByMe ? Colors.pinkAccent : Colors.white38,
             ),
-            title: Text(p.title,
-                style: const TextStyle(fontWeight: FontWeight.w700)),
-            subtitle: Text(
-              '${p.ownerNickname} · ${p.songs.length}곡'
-              '${p.forkedFromTitle != null ? ' · 퍼옴' : ''}',
-              style: const TextStyle(color: Colors.white38, fontSize: 12),
+            const SizedBox(width: 3),
+            Text('${p.likeCount}',
+                style:
+                    const TextStyle(color: Colors.white54, fontSize: 12)),
+            const SizedBox(width: 10),
+            const Icon(Icons.library_add,
+                size: 15, color: Colors.white38),
+            const SizedBox(width: 3),
+            Text('${p.forkCount}',
+                style:
+                    const TextStyle(color: Colors.white54, fontSize: 12)),
+            if (showDragHandle) ...[
+              const SizedBox(width: 8),
+              ReorderableDragStartListener(
+                index: index,
+                child:
+                    const Icon(Icons.drag_handle, color: Colors.white38),
+              ),
+            ],
+          ],
+        ),
+        onTap: () async {
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => PlaylistDetailScreen(playlist: p),
             ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  p.likedByMe ? Icons.favorite : Icons.favorite_border,
-                  size: 16,
-                  color: p.likedByMe ? Colors.pinkAccent : Colors.white38,
-                ),
-                const SizedBox(width: 4),
-                Text('${p.likeCount}',
-                    style: const TextStyle(
-                        color: Colors.white54, fontSize: 12)),
-              ],
-            ),
-            onTap: () async {
-              await Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => PlaylistDetailScreen(playlist: p),
-                ),
-              );
-              onChanged();
-            },
-          ),
-        );
-      },
+          );
+          onChanged();
+        },
+      ),
     );
   }
 }
 
-class _CreatePlaylistDialog extends StatefulWidget {
-  const _CreatePlaylistDialog();
+/// 플레이리스트 생성/수정 다이얼로그 (이름 + 이모지)
+class PlaylistFormDialog extends StatefulWidget {
+  const PlaylistFormDialog({super.key, this.initialTitle, this.initialEmoji});
+
+  final String? initialTitle;
+  final String? initialEmoji;
 
   @override
-  State<_CreatePlaylistDialog> createState() => _CreatePlaylistDialogState();
+  State<PlaylistFormDialog> createState() => _PlaylistFormDialogState();
 }
 
-class _CreatePlaylistDialogState extends State<_CreatePlaylistDialog> {
-  final _title = TextEditingController();
-  String _emoji = '🎵';
-  static const _emojis = ['🎵', '🔥', '🌙', '💜', '🏃', '📚', '☔️', '🚗'];
+class _PlaylistFormDialogState extends State<PlaylistFormDialog> {
+  late final _title = TextEditingController(text: widget.initialTitle);
+  late String _emoji = widget.initialEmoji ?? '🎵';
+  static const _emojis = ['🎵', '🔥', '🌙', '💜', '🏃', '🏋️', '📚', '☔️', '🚗'];
 
   @override
   void dispose() {
@@ -192,9 +289,10 @@ class _CreatePlaylistDialogState extends State<_CreatePlaylistDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isEdit = widget.initialTitle != null;
     return AlertDialog(
       backgroundColor: const Color(0xFF1A1526),
-      title: const Text('새 플레이리스트'),
+      title: Text(isEdit ? '플레이리스트 수정' : '새 플레이리스트'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -209,6 +307,7 @@ class _CreatePlaylistDialogState extends State<_CreatePlaylistDialog> {
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,
+            runSpacing: 8,
             children: [
               for (final e in _emojis)
                 GestureDetector(
@@ -234,7 +333,7 @@ class _CreatePlaylistDialogState extends State<_CreatePlaylistDialog> {
             if (title.isEmpty) return;
             Navigator.of(context).pop((title, _emoji));
           },
-          child: const Text('만들기'),
+          child: Text(isEdit ? '저장' : '만들기'),
         ),
       ],
     );

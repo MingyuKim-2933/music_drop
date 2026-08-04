@@ -6,6 +6,7 @@ import '../models/playlist.dart';
 import '../models/song.dart';
 import '../repositories/playlist_repository.dart';
 import '../services/auth_service.dart';
+import 'playlists_screen.dart';
 import 'song_search_screen.dart';
 
 class PlaylistDetailScreen extends StatefulWidget {
@@ -55,6 +56,35 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     );
   }
 
+  Future<void> _rename() async {
+    final result = await showDialog<(String, String)>(
+      context: context,
+      builder: (_) => PlaylistFormDialog(
+        initialTitle: _playlist.title,
+        initialEmoji: _playlist.emoji,
+      ),
+    );
+    if (result == null || !mounted) return;
+    final updated = await context.read<PlaylistRepository>().updatePlaylist(
+          _playlist.id,
+          title: result.$1,
+          emoji: result.$2,
+        );
+    if (mounted) setState(() => _playlist = updated);
+  }
+
+  Future<void> _onReorderSongs(int oldIndex, int newIndex) async {
+    final songs = [..._playlist.songs];
+    final song = songs.removeAt(oldIndex);
+    songs.insert(newIndex, song);
+    setState(() => _playlist = _playlist.copyWith(songs: songs));
+    final updated = await context.read<PlaylistRepository>().reorderSongs(
+          _playlist.id,
+          songs.map((s) => s.trackId).toList(),
+        );
+    if (mounted) setState(() => _playlist = updated);
+  }
+
   Future<void> _delete() async {
     final ok = await showDialog<bool>(
       context: context,
@@ -85,9 +115,14 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
         backgroundColor: Colors.transparent,
         title: Text('${_playlist.emoji} ${_playlist.title}'),
         actions: [
-          if (_isMine)
+          if (_isMine) ...[
+            IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: '이름 변경',
+                onPressed: _rename),
             IconButton(
                 icon: const Icon(Icons.delete_outline), onPressed: _delete),
+          ],
         ],
       ),
       floatingActionButton: _isMine
@@ -153,26 +188,39 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.white54)),
                   )
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
-                    itemCount: _playlist.songs.length,
-                    itemBuilder: (context, i) {
-                      final song = _playlist.songs[i];
-                      return _SongTile(
-                        song: song,
-                        onRemove: _isMine
-                            ? () async {
-                                final updated = await context
-                                    .read<PlaylistRepository>()
-                                    .removeSong(_playlist.id, song.trackId);
-                                if (mounted) {
-                                  setState(() => _playlist = updated);
-                                }
+                : _isMine
+                    // 내 플레이리스트: 드래그로 곡 순서 변경
+                    ? ReorderableListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
+                        itemCount: _playlist.songs.length,
+                        onReorderItem: _onReorderSongs,
+                        proxyDecorator: (child, _, _) => Material(
+                          color: Colors.transparent,
+                          child: child,
+                        ),
+                        itemBuilder: (context, i) {
+                          final song = _playlist.songs[i];
+                          return _SongTile(
+                            key: ValueKey(song.trackId),
+                            song: song,
+                            reorderIndex: i,
+                            onRemove: () async {
+                              final updated = await context
+                                  .read<PlaylistRepository>()
+                                  .removeSong(_playlist.id, song.trackId);
+                              if (mounted) {
+                                setState(() => _playlist = updated);
                               }
-                            : null,
-                      );
-                    },
-                  ),
+                            },
+                          );
+                        },
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
+                        itemCount: _playlist.songs.length,
+                        itemBuilder: (context, i) =>
+                            _SongTile(song: _playlist.songs[i]),
+                      ),
           ),
         ],
       ),
@@ -181,10 +229,11 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
 }
 
 class _SongTile extends StatelessWidget {
-  const _SongTile({required this.song, this.onRemove});
+  const _SongTile({super.key, required this.song, this.onRemove, this.reorderIndex});
 
   final Song song;
   final VoidCallback? onRemove;
+  final int? reorderIndex; // 있으면 드래그 핸들 표시
 
   @override
   Widget build(BuildContext context) {
@@ -227,6 +276,15 @@ class _SongTile extends StatelessWidget {
                 icon: const Icon(Icons.remove_circle_outline,
                     size: 18, color: Colors.white38),
                 onPressed: onRemove,
+              ),
+            if (reorderIndex != null)
+              ReorderableDragStartListener(
+                index: reorderIndex!,
+                child: const Padding(
+                  padding: EdgeInsets.only(left: 4),
+                  child:
+                      Icon(Icons.drag_handle, size: 20, color: Colors.white38),
+                ),
               ),
           ],
         ),

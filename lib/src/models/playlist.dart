@@ -8,8 +8,10 @@ class Playlist {
   final String emoji; // 커버 대신 쓰는 이모지
   final List<Song> songs;
   final int likeCount;
+  final int forkCount; // 퍼가요 수
   final bool likedByMe;
   final String? forkedFromTitle; // 퍼온 플레이리스트 원본 제목
+  final int sortOrder; // 내 플레이리스트 수동 정렬 순서
   final DateTime updatedAt;
 
   const Playlist({
@@ -20,8 +22,10 @@ class Playlist {
     this.emoji = '🎵',
     this.songs = const [],
     this.likeCount = 0,
+    this.forkCount = 0,
     this.likedByMe = false,
     this.forkedFromTitle,
+    this.sortOrder = 0,
     required this.updatedAt,
   });
 
@@ -30,7 +34,9 @@ class Playlist {
     String? emoji,
     List<Song>? songs,
     int? likeCount,
+    int? forkCount,
     bool? likedByMe,
+    int? sortOrder,
     DateTime? updatedAt,
   }) =>
       Playlist(
@@ -41,8 +47,10 @@ class Playlist {
         emoji: emoji ?? this.emoji,
         songs: songs ?? this.songs,
         likeCount: likeCount ?? this.likeCount,
+        forkCount: forkCount ?? this.forkCount,
         likedByMe: likedByMe ?? this.likedByMe,
         forkedFromTitle: forkedFromTitle,
+        sortOrder: sortOrder ?? this.sortOrder,
         updatedAt: updatedAt ?? this.updatedAt,
       );
 
@@ -54,8 +62,10 @@ class Playlist {
         'emoji': emoji,
         'songs': songs.map((s) => s.toJson()).toList(),
         'likeCount': likeCount,
+        'forkCount': forkCount,
         'likedByMe': likedByMe,
         'forkedFromTitle': forkedFromTitle,
+        'sortOrder': sortOrder,
         'updatedAt': updatedAt.toIso8601String(),
       };
 
@@ -69,8 +79,10 @@ class Playlist {
             .map((s) => Song.fromJson(Map<String, dynamic>.from(s as Map)))
             .toList(),
         likeCount: (json['likeCount'] as num?)?.toInt() ?? 0,
+        forkCount: (json['forkCount'] as num?)?.toInt() ?? 0,
         likedByMe: json['likedByMe'] as bool? ?? false,
         forkedFromTitle: json['forkedFromTitle'] as String?,
+        sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
         updatedAt: DateTime.parse(json['updatedAt'] as String),
       );
 }

@@ -11,7 +11,9 @@ class SupabasePlaylistRepository implements PlaylistRepository {
   String get _uid => _db.auth.currentUser!.id;
 
   static const _select =
-      '*, playlist_songs(*), playlist_likes(count), profiles!playlists_owner_id_fkey(nickname)';
+      '*, playlist_songs(*), playlist_likes(count), '
+      'forks:playlists!playlists_forked_from_fkey(count), '
+      'profiles!playlists_owner_id_fkey(nickname)';
 
   @override
   Future<List<Playlist>> fetchMyPlaylists() async {
@@ -19,22 +21,68 @@ class SupabasePlaylistRepository implements PlaylistRepository {
         .from('playlists')
         .select(_select)
         .eq('owner_id', _uid)
-        .order('updated_at', ascending: false);
+        .order('sort_order', ascending: true)
+        .order('updated_at', ascending: false)
+        .order('position',
+            referencedTable: 'playlist_songs', ascending: true);
     final likedIds = await _myLikedIds();
     return rows.map((r) => _fromRow(r, likedIds)).toList();
   }
 
   @override
-  Future<List<Playlist>> fetchExplore() async {
-    final rows = await _db
+  Future<List<Playlist>> fetchExplore({String? query}) async {
+    var builder = _db
         .from('playlists')
         .select(_select)
         .neq('owner_id', _uid)
-        .eq('is_public', true)
+        .eq('is_public', true);
+    final q = query?.trim();
+    if (q != null && q.isNotEmpty) {
+      builder = builder.ilike('title', '%$q%');
+    }
+    final rows = await builder
         .order('updated_at', ascending: false)
+        .order('position',
+            referencedTable: 'playlist_songs', ascending: true)
         .limit(50);
     final likedIds = await _myLikedIds();
-    return rows.map((r) => _fromRow(r, likedIds)).toList();
+    final result = rows.map((r) => _fromRow(r, likedIds)).toList();
+    // 좋아요 많은 순 (집계 컬럼은 서버 정렬 불가 → 클라이언트 정렬)
+    result.sort((a, b) => b.likeCount.compareTo(a.likeCount));
+    return result;
+  }
+
+  @override
+  Future<Playlist> updatePlaylist(String id,
+      {String? title, String? emoji}) async {
+    await _db.from('playlists').update({
+      'title': ?title,
+      'emoji': ?emoji,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    }).eq('id', id);
+    return _fetchOne(id);
+  }
+
+  @override
+  Future<void> reorderMyPlaylists(List<String> orderedIds) async {
+    for (var i = 0; i < orderedIds.length; i++) {
+      await _db
+          .from('playlists')
+          .update({'sort_order': i}).eq('id', orderedIds[i]);
+    }
+  }
+
+  @override
+  Future<Playlist> reorderSongs(
+      String playlistId, List<int> orderedTrackIds) async {
+    for (var i = 0; i < orderedTrackIds.length; i++) {
+      await _db
+          .from('playlist_songs')
+          .update({'position': i})
+          .eq('playlist_id', playlistId)
+          .eq('track_id', orderedTrackIds[i]);
+    }
+    return _fetchOne(playlistId);
   }
 
   @override
@@ -109,6 +157,7 @@ class SupabasePlaylistRepository implements PlaylistRepository {
           'owner_id': _uid,
           'title': source.title,
           'emoji': source.emoji,
+          'forked_from': source.id,
           'forked_from_title':
               '${source.ownerNickname}님의 ${source.title}',
         })
@@ -143,8 +192,13 @@ class SupabasePlaylistRepository implements PlaylistRepository {
   }
 
   Future<Playlist> _fetchOne(String id) async {
-    final row =
-        await _db.from('playlists').select(_select).eq('id', id).single();
+    final row = await _db
+        .from('playlists')
+        .select(_select)
+        .eq('id', id)
+        .order('position',
+            referencedTable: 'playlist_songs', ascending: true)
+        .single();
     return _fromRow(row, await _myLikedIds());
   }
 
@@ -166,10 +220,13 @@ class SupabasePlaylistRepository implements PlaylistRepository {
               storeUrl: s['store_url'] as String?,
             ))
         .toList();
-    final likesAgg = row['playlist_likes'] as List? ?? [];
-    final likeCount = likesAgg.isNotEmpty
-        ? ((likesAgg.first as Map)['count'] as num?)?.toInt() ?? 0
-        : 0;
+    int aggCount(dynamic agg) {
+      final list = agg as List? ?? [];
+      return list.isNotEmpty
+          ? ((list.first as Map)['count'] as num?)?.toInt() ?? 0
+          : 0;
+    }
+
     return Playlist(
       id: row['id'] as String,
       title: row['title'] as String,
@@ -178,9 +235,11 @@ class SupabasePlaylistRepository implements PlaylistRepository {
           (row['profiles'] as Map?)?['nickname'] as String? ?? '알 수 없음',
       emoji: row['emoji'] as String? ?? '🎵',
       songs: songs,
-      likeCount: likeCount,
+      likeCount: aggCount(row['playlist_likes']),
+      forkCount: aggCount(row['forks']),
       likedByMe: likedIds.contains(row['id'] as String),
       forkedFromTitle: row['forked_from_title'] as String?,
+      sortOrder: (row['sort_order'] as num?)?.toInt() ?? 0,
       updatedAt: DateTime.parse(row['updated_at'] as String),
     );
   }
