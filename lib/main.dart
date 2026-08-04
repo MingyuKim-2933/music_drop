@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:provider/provider.dart';
 
+import 'src/config/app_keys.dart';
 import 'src/repositories/friends_repository.dart';
 import 'src/screens/home_screen.dart';
+import 'src/screens/login_screen.dart';
+import 'src/services/auth_service.dart';
 import 'src/services/now_playing_service.dart';
 import 'src/services/spotify_auth.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  KakaoSdk.init(nativeAppKey: AppKeys.kakaoNativeAppKey);
   runApp(const SoundmateApp());
 }
 
@@ -20,6 +25,9 @@ class SoundmateApp extends StatelessWidget {
       providers: [
         Provider<SpotifyAuth>(create: (_) => SpotifyAuth()),
         Provider<FriendsRepository>(create: (_) => MockFriendsRepository()),
+        ChangeNotifierProvider<AuthService>(
+          create: (_) => AuthService()..restoreSession(),
+        ),
         ChangeNotifierProvider<NowPlayingService>(
           create: (ctx) => NowPlayingService(ctx.read<SpotifyAuth>())..start(),
         ),
@@ -37,8 +45,24 @@ class SoundmateApp extends StatelessWidget {
           scaffoldBackgroundColor: const Color(0xFF0E0B16),
           fontFamily: 'Pretendard',
         ),
-        home: const HomeScreen(),
+        home: const _AuthGate(),
       ),
     );
+  }
+}
+
+/// 로그인 상태에 따라 로그인 화면 ↔ 홈 화면 전환
+class _AuthGate extends StatelessWidget {
+  const _AuthGate();
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthService>();
+    if (!auth.initialized) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    return auth.isLoggedIn ? const HomeScreen() : const LoginScreen();
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../services/auth_service.dart';
 import '../services/media_session_channel.dart';
 import '../services/now_playing_service.dart';
 import '../services/spotify_auth.dart';
@@ -41,6 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final service = context.watch<NowPlayingService>();
+    final auth = context.watch<AuthService>();
 
     return Scaffold(
       appBar: AppBar(
@@ -50,6 +52,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Text('계정',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleSmall
+                  ?.copyWith(color: Colors.white54)),
+          const SizedBox(height: 8),
+          Card(
+            color: const Color(0xFF1A1526),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.white10,
+                backgroundImage: auth.user?.profileImageUrl != null
+                    ? NetworkImage(auth.user!.profileImageUrl!)
+                    : null,
+                child: auth.user?.profileImageUrl == null
+                    ? const Icon(Icons.person, color: Colors.white70)
+                    : null,
+              ),
+              title: Text(auth.user?.nickname ?? ''),
+              subtitle: Text(
+                '${auth.user?.provider.label ?? ''} 로그인'
+                '${auth.user?.email != null ? ' · ${auth.user!.email}' : ''}',
+              ),
+              trailing: TextButton(
+                onPressed: () async {
+                  await context.read<AuthService>().signOut();
+                  if (context.mounted) {
+                    Navigator.of(context).popUntil((r) => r.isFirst);
+                  }
+                },
+                child: const Text('로그아웃'),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
           Text('음악 연결',
               style: Theme.of(context)
                   .textTheme

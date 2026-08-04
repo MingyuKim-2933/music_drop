@@ -6,6 +6,7 @@ import '../repositories/friends_repository.dart';
 import '../services/now_playing_service.dart';
 import '../widgets/friend_tile.dart';
 import '../widgets/now_playing_card.dart';
+import 'invite_friends_screen.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -41,6 +42,21 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('듣는중 🎧',
             style: TextStyle(fontWeight: FontWeight.w800)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.person_add_alt_1_outlined),
+            tooltip: '친구 찾기',
+            onPressed: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const InviteFriendsScreen()),
+              );
+              // 친구 추가 후 돌아오면 피드 갱신
+              if (mounted) {
+                setState(() {
+                  _friends = context.read<FriendsRepository>().fetchFriends();
+                });
+              }
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () => Navigator.of(context).push(

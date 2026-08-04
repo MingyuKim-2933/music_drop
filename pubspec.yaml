@@ -39,6 +39,10 @@ dependencies:
   shared_preferences: ^2.5.5
   provider: ^6.1.5+1
   flutter_web_auth_2: ^5.0.3
+  kakao_flutter_sdk_user: ^2.0.0+1
+  flutter_naver_login: ^2.1.1
+  flutter_contacts: ^2.3.1
+  share_plus: ^13.3.0
 
 dev_dependencies:
   flutter_test:
